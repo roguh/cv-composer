@@ -20,7 +20,7 @@ On NixOS, you can use the `defaut.nix` file should install the complete developm
 nix-shell
 ```
 
-## Compilation
+### Compilation
 
 ```
 cd build
