@@ -8,16 +8,16 @@ git clone --recursive https://github.com/hucal/cv-composer
 ```
 
 CMake and OpenCV are needed to compile this project.
-On Ubuntu, these may be installed easily by running:
+On Ubuntu, these can be installed easily by running:
 
 ```
 sudo apt install libopencv-dev cmake
 ```
 
-On NixOS, you can use the `.nix` file should install the complete development version of OpenCV.
+On NixOS, you can use the `defaut.nix` file should install the complete development version of OpenCV.
 
 ```
-nix-shell opencv.nix
+nix-shell
 ```
 
 ## Compilation
