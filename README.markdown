@@ -1,6 +1,12 @@
 # Computer Vision Algorithms
 
 ## Installation
+To download all files, run
+
+```
+git clone --recursive https://github.com/hucal/cv-composer
+```
+
 CMake and OpenCV are needed to compile this project.
 On Ubuntu, these may be installed easily by running:
 
