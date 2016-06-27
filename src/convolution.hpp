@@ -4,7 +4,7 @@
 using namespace cv;
 int convolution(const Mat& input, Mat& output, const Mat& kernel);
 
-class ConvolutionInterface : public Interface {
+class ConvolutionAlgorithm : public FrameAlgorithm {
 public:
     bool apply_gauss = false;
     bool apply_laplacian = false;
@@ -17,7 +17,7 @@ public:
 
     std::map<std::string, Mat_<float>> kernels;
 
-ConvolutionInterface() : Interface(CV_8UC3,
+ConvolutionAlgorithm() : FrameAlgorithm(
 R".(Usage: convolution [--kernel=<name>] [--gaussian=<stddev>] [--laplacian] [--polar-x=<kernel-x> --polar-y=<kernel-y>] [--help | -h]] [<algorithm> [<args>...]]
 
 options:
@@ -75,10 +75,11 @@ Kernels:
         return false;
     }
 
-    inline virtual void parse_arguments(std::map<std::string, docopt::value> m,
-                                        std::vector<std::string> a)
+    inline virtual std::map<std::string, docopt::value>
+    parse_arguments(std::map<std::string, docopt::value> m,
+                    std::vector<std::string> a)
     {
-        Interface::parse_arguments(m, a);
+        FrameAlgorithm::parse_arguments(m, a);
         if (is_kernel(args["--kernel"])) {
             kernel_key = args["--kernel"].asString();
             apply_kernel = true;
@@ -95,6 +96,7 @@ Kernels:
             kernel_key_x = args["--polar-x"].asString();
             kernel_key_y = args["--polar-y"].asString();
         }
+        return args;
     }
 
     inline virtual void process_frame(const Mat& in, Mat& out, std::string prefix="") override

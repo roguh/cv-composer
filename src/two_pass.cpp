@@ -2,16 +2,19 @@
 
 float cat_by_value(Vec3b bgr, void* conf) 
 {
-    //CLARIFY
-    float max_cats = conf == nullptr ? 2 : *((float*)conf);
+    float max_cats = 2;
+    if (conf != nullptr) {
+        max_cats = *((float*)conf);
+    }
     float gray = bgr_to_gray(bgr);
     return (float)((int)(gray * max_cats)) / max_cats;
 }
 
-
 void two_pass(const Mat& input, Mat& output,
               const std::function<float(Vec3b, void*)>& categorize, void* conf, bool north_bias)
 {
+    output = Mat(input.size(), CV_32FC3);
+    
     /* categorize pixels */
     Mat categories(input.size(), CV_32FC1);
     for (int r = 0; r < input.rows; r++) {

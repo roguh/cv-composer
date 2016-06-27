@@ -160,6 +160,8 @@ void canny_edges(const Mat& bgr_input, Mat& output,
 
     save_mat(interm_name_prefix + "gray", input, save, gui);
 
+    output = Mat(input.size(), CV_32FC1);
+
     /* find gradient magnitude and direction using Sobel filters */
     Mat kernel;
     if (useSobel) {
