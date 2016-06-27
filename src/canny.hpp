@@ -17,33 +17,49 @@ void canny_edges(const Mat& bgr_input, Mat& output,
                  bool useSobel=true, std::string interm_name_prefix="",
                  bool dynamic_thresh=false);
 
-class CannyInterface : public Interface {
+class CannyAlgorithm : public FrameAlgorithm {
 public:
     const float default_thi = 0.5;
     const float default_tlo = 0.25;
 
-CannyInterface() : Interface(CV_32FC1,
+    bool save_interm;
+    bool show_interm;
+    bool max_thresh;
+    bool min_thresh;
+    bool n8;
+    bool scharr;
+
+    CannyAlgorithm() : FrameAlgorithm(
 R"(Usage: canny [--sobel | --scharr]
-             [--thresh-hi=<thi>] [--thresh-lo=<tlo>]
+             [--max-thresh=<thi>] [--min-thresh=<tlo>]
              [--n8 | --n4] [--help] [<algorithm> [<args>...]]]
 
 Options:
-  --thresh-hi=<thi> Threshold [default: 0.5].
-  --thresh-lo=<tlo> Threshold [default: 0.25].
+  --max-thresh=<thi> Threshold [default: 0.5].
+  --min-thresh=<tlo> Threshold [default: 0.25].
   -h --help Show this message.
 )")
     { }
 
-    inline virtual void process_frame(const Mat& in, Mat& out, std::string prefix="") override
+    inline virtual std::map<std::string, docopt::value>
+    parse_arguments(std::map<std::string, docopt::value> m,
+                    std::vector<std::string> a)
     {
-        canny_edges(in, out,
-                    main_args["--show-intermediates"].asBool(), // save interm.
-                    !main_args["--no-interm-gui"].asBool(), // show interm.
-                    docopt_to_float(args, "--thresh-lo", default_thi), // min thresh
-                    docopt_to_float(args, "--thresh-hi", default_tlo), // max thresh
-                    args["--n8"].asBool() && !args["--n4"].asBool(), // n8 or n4
-                    args["--sobel"].asBool() && !args["--scharr"].asBool(), // sobel or scharr
-                    prefix);
+        FrameAlgorithm::parse_arguments(m, a);
+        save_interm = main_args["--show-intermediates"].asBool();
+        show_interm = main_args["--no-interm-gui"].asBool();
+        max_thresh = docopt_to_float(args, "--min-thresh", default_thi);
+        min_thresh = docopt_to_float(args, "--max-thresh", default_tlo);
+        n8 = args["--n8"].asBool();
+        scharr = args["--scharr"].asBool();
+        return args;
+    }
+
+    inline virtual void process_frame(const Mat& in, Mat& out,
+                                      std::string prefix="") override
+    {
+        canny_edges(in, out, save_interm, show_interm, min_thresh, max_thresh,
+                    n8, !scharr, prefix);
     }
 };
 
