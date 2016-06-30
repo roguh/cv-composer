@@ -2,13 +2,103 @@
 <head>
 <title></title>
 <link rel="stylesheet" type="text/css" href="style.css"/>
+<style>
+  input.num_input {
+    width: 32px;
+  }
+  table td {
+    width: auto;
+  }
+  table.palette td:first-child {
+    text-align: right;
+  }
+</style>
 </head>
 <body>
 <div id='vis'></div>
+<label><input id='show_r2' type='checkbox'>Show R2</label>
+<label><input id='show_s2' type='checkbox'>Show S2</label>
+<label><input id='show_r3' type='checkbox'>Show R3</label>
+
+<table>
+<tr>
+<td><input class='num_input' value=1 id='trans_11' type='number'></td>
+<td><input class='num_input' value=0 id='trans_12' type='number'></td>
+<td><input class='num_input' value=0 id='trans_13' type='number'></td>
+</tr>
+<tr>
+<td><input class='num_input' value=0 id='trans_21' type='number'></td>
+<td><input class='num_input' value=1 id='trans_22' type='number'></td>
+<td><input class='num_input' value=0 id='trans_23' type='number'></td>
+<td>
+  <button id='apply_trans'>Apply transformation</button>
+</td>
+</tr>
+<tr>
+<td><input class='num_input' value=0 id='trans_31' type='number'></td>
+<td><input class='num_input' value=0 id='trans_32' type='number'></td>
+<td><input class='num_input' value=1 id='trans_33' type='number'></td>
+</tr>
+</table>
+
+<table class='palette'>
+<tr>
+<td>
+  <button id='create_sim'>Create similarity</button>
+</td>
+<td>
+ s: <input class='num_input' value=1 id='sim_s' type='number'>
+ theta: <input class='num_input' value=0 id='sim_theta' type='number'>
+ t_x: <input class='num_input' value=0 id='sim_tx' type='number'>
+ t_y: <input class='num_input' value=0 id='sim_ty' type='number'>
+</td>
+<!--tr>
+<td>
+  <button id='create_aff'>Create affine</button>
+</td>
+<td>
+ theta: <input class='num_input' value=0 id='aff_theta' type='number'>
+ phi: <input class='num_input' value=0 id='aff_phi' type='number'>
+ lambda_1: <input class='num_input' value=0 id='aff_l1' type='number'>
+ lambda_2: <input class='num_input' value=0 id='aff_l2' type='number'>
+ t_x: <input class='num_input' value=0 id='aff_tx' type='number'>
+ t_y: <input class='num_input' value=0 id='aff_ty' type='number'>
+</td>
+</tr--!>
+<tr>
+<td>
+  <button id='add_point'>Add point</button></td>
+</td>
+<td>
+ x: <input class='num_input' value=0 id='point_x' type='number'>
+ y: <input class='num_input' value=0 id='point_y' type='number'>
+</td>
+</tr>
+<tr>
+<td>
+  <button id='add_line'>Add line</button></td>
+</td>
+<td>
+  <input class='num_input' value=1 id='line_a' type='number'> * x +
+  <input class='num_input' value=1 id='line_b' type='number'> * y +
+  <input class='num_input' value=0 id='line_c' type='number'> = 0
+</td>
+</tr>
+<tr>
+<td>
+  <button id='clear_all'>Clear all</button>
+</td>
+</tr>
+</table>
+
+<p>Angles theta and phi are in degrees. The grid is from (-2, -2) to (2, 2).</p>
+
+<script src="https://code.jquery.com/jquery-3.0.0.slim.min.js"></script>
 <script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r78/three.min.js"></script>
 <script src="js/Detector.js"></script>
 <script src="js/OrbitControls.js"></script>
+<script src="js/util.min.js"></script>
 <script src="js/vis.min.js"></script>
 </body>
 </html>

@@ -27,165 +27,95 @@ r2_resolution = 1024
 r2_canvas.width = r2_canvas.height = r2_resolution
 r2_stage = new (createjs.Stage)(r2_canvas)
 
-# Utility canvas functions
-ctx_coords = (xy, f) ->
-  [x, y] = if xy instanceof THREE.Vector3 or xy instanceof THREE.Vector2 \
-    then [xy.x, xy.y] else xy
-  f(r2_resolution / 2 * (x + 1), r2_resolution / 2 * (1 - y))
-
-ctx_color = (c) ->
-  if c instanceof String || typeof c == "string"
-    return c
-  else
-    return '#' + c.toString(16)
-
-canvas_line = (p1, p2, color, width) ->
-  c = ctx_coords(p1, (x, y) -> r2_stage.addChild(new (createjs.Shape)()).set(x: x, y: y))
-  ctx_coords(p1, (x1, y1) ->
-    ctx_coords(p2, (x2, y2) ->
-      c.graphics.beginStroke(ctx_color(color)).setStrokeStyle(width)
-                .moveTo(0, 0).lineTo(x2 - x1, y2 - y1)))
-  return c
-
-# Utility geometry functions
-PI = Math.PI
-
-vec2 = (x, y) -> new (THREE.Vector2)(x, y)
-vec3 = (x, y, z) -> new (THREE.Vector3)(x, y, z)
-array_from_vec3 = (v) -> return (if v instanceof THREE.Vector3 then [v.x, v.y, v.z] else v)
-vec3_from_array = (p) ->
-    return (if p instanceof THREE.Vector3 then p else vec3(p[0], p[1], if p.length > 2 then p[2] else 1))
-vec2_from_array = (p) ->
-    return (if p instanceof THREE.Vector2 then p else vec2(p[0], p[1]))
-
-# Collections of entitites
-add_to = (c, o) ->
-  c.push(o)
-  return o
-
-s2_points = []
-r3_points = []
-root_objects = []
-
-extend = (v1, v2, length=camera_far) ->
-    v1_orig = v1.clone()
-    v1.sub(v2)
-    v1.setLength(length)
-    v1.add(v2)
-    v2.sub(v1_orig)
-    v2.setLength(length)
-    v2.add(v1_orig)
-    return [v1, v2]
-
-# Drawing 3D entities
-make_point = (collection, size, color, opacity=1.0, detail=15) ->
- return add_to(collection, new (THREE.Mesh)(
-  new (THREE.SphereGeometry)(size, detail, detail),
-  new (THREE.MeshLambertMaterial)(
-    color: color,
-    transparent: opacity != 1.0, opacity: opacity)))
-
-make_plane = (collection, size, color, opacity=1.0) ->
- return add_to(collection, new (THREE.Mesh)(
-  new (THREE.PlaneGeometry)(size, size)
-  new (THREE.MeshBasicMaterial)((
-    color: color, side: THREE.DoubleSide,
-    transparent: opacity != 1.0, opacity: opacity))))
-
-make_line = (collection, here, there, color, width=1, extend_vectors=true) ->
-  # get vectors and extend the line's length to 2 * camera_far
-  v1 = vec3_from_array(here)
-  v2 = vec3_from_array(there)
-  if extend_vectors
-    [v1, v2] = extend(v1, v2)
-
-  geometry = new (THREE.Geometry)
-  geometry.vertices.push(v1, v2)
-  return add_to(collection, new (THREE.Line)(geometry,
-    new (THREE.LineBasicMaterial)((color: color, linewidth: width))))
-
-make_p_point = (p, color) ->
-  p = vec2_from_array p
-
-  # Draw dot on canvas
-  c = ctx_coords(p, (x, y) -> r2_stage.addChild(new (createjs.Shape)()).set(x: x, y: y))
-  c.graphics.beginFill(ctx_color(color)).drawCircle(0, 0, 4)
-
-  o1 = make_line(r3_points, [-p.x, -p.y, -1], [p.x, p.y, 1], color)
-
-  o2 = make_point(s2_points, 0.0075, color)
-  o2.position.copy(vec3(p.x, p.y, 1).normalize())
-  o3 = make_point(s2_points, 0.0075, color)
-  o3.position.copy(vec3(-p.x, -p.y, -1).normalize())
-
-  return (
-    r2: [c]
-    s2: [o2, o3]
-    r3: [o1])
-
-make_p_line = (p1, p2, color, opacity=1.0, draw_points=false) ->
-  [p1, p2] = [vec2_from_array(p1), vec2_from_array(p2)]
-  # Draw line on canvas
-  c = canvas_line(p1, p2, color, 3)
-
-  _p1 = _p2 = []
-  if draw_points
-    _p1 = make_p_point(p1, color)
-    _p2 = make_p_point(p2, color)
-
-  # Rotate plane so that it lies along on the line from p1 to p2
-  o = make_plane(r3_points, 3, color, opacity)
-  v1 = vec3(p1.x, p1.y, 1)
-  v2 = vec3(p2.x, p2.y, 1)
-  v1.cross(v2)
-  v1.normalize()
-  angle = v1.angleTo(vec3(0,0,1))
-  o.rotation.setFromQuaternion new
-    (THREE.Quaternion)().setFromUnitVectors(vec3(0, 0, 1), v1)
-
-  return (
-    r2: _p1.r2.concat(_p2.r2).concat(c)
-    s2: _p1.s2.concat(_p2.s2)
-    r3: _p1.r3.concat(_p2.r3).concat([o]))
-
 # Create fixed features
 
 # xy plane
 make_plane(root_objects, 2, 0xbbffbb)
 
 # Sphere of radius 1
-s2 = make_point(s2_points, 1, 0xffffff, 0.2, 90)
+s2 = make_point(s2_points, 2, 0x101010, 1.0, 50)
 
 # R2
 r2_texture = new (THREE.Texture)(r2_canvas)
 r2_texture.needsUpdate = true
-r2 = add_to(root_objects, new (THREE.Mesh)(
+r2 = new (THREE.Mesh)(
   new (THREE.PlaneGeometry)(2, 2),
   new (THREE.MeshBasicMaterial)((
         side: THREE.DoubleSide
         map: r2_texture
-        transparent: true))))
+        transparent: true)))
 r2.position.z = 1
 
 # R2 grid
 max = 10
 for i in [-max..max]
-  canvas_line([i / max, 1], [i / max, -1], 0x222222, 1)
-  canvas_line([1, i / max], [-1, i / max], 0x222222, 1)
+  r2_stage.addChild canvas_line([i / max, 1], [i / max, -1], 0x222222, 1)
+  r2_stage.addChild canvas_line([1, i / max], [-1, i / max], 0x222222, 1)
 
 scene.add new (THREE.AmbientLight)(0x404040)
 scene.add new (THREE.HemisphereLight)(0xffffff, 0x404040, 1)
 scene.add obj for obj in root_objects
 
 # Sample points and lines
-make_p_point([0, 0], 0xff0000)
-make_p_point([0.5, 0.5], 0xff0000)
-make_p_line([0.2, 0.2], [-0.3, 0.4], 0xaa00ff, 1.0, true)
-make_p_line([-0.2, -0.2], [0.3, -0.3], 0xff00aa, 1.0, true)
+x = y = 0.1
+theta = PI / 4
+c = Math.cos(theta)
+s = Math.sin(theta)
+m = new (THREE.Matrix3)().set(
+  c, 0.1,   x, # 0
+  0, s,   y, # 0 
+  0, 0.4, 1) # 0
+  # 0, 0,   0, 1)
+t = (m, p) -> array2_from_vec3(vec3_from_array(p).applyMatrix3(m))
+points = [{'p': [0, 0], 'c': 0xff0000},
+  {'p': [0.5, 0.5], 'c': 0xff00f0},
+  {'p': [-0.4, 0.6], 'c': 0xfff000}]
+lines = [{'p1': [0.2, 0.2], 'p2': [-0.3, 0.4], 'c': 0xaa0ff},
+  {'p1': [-0.2, -0.1], 'p2': [0, 0.1], 'c': 0xff0aa}]
 
-scene.add obj for obj in s2_points
-scene.add obj for obj in r3_points
-r2_stage.update()
+
+r2_points = new Array()
+s2_points = new Array()
+r3_points = new Array() 
+
+clear_scene = () ->
+  for obj in r3_points.concat(s2_points)
+    scene.remove obj
+  scene.remove r2
+  for obj in r2_points
+    r2_stage.removeChild(obj)
+  r2_stage.update()
+  r2.material.map.needsUpdate = true
+  r2_points = new Array()
+  s2_points = new Array()
+  r3_points = new Array() 
+
+add_all = (m, show_r2=true, show_s2=true, show_r3=true) ->
+  for p in points
+    make_p_point(t(m, p.p), p.c) 
+  for p in lines
+    make_p_line(t(m, p.p1), t(m, p.p2), p.c, 1.0, true)
+
+  if show_r3
+    for obj in r3_points
+      scene.add obj
+  if show_s2
+    for obj in s2_points
+      scene.add obj
+  if show_r2
+    scene.add r2
+    for obj in r2_points
+      r2_stage.addChild obj
+  r2_stage.update()
+  r2.material.map.needsUpdate = true
+
+# identity matrix
+transform = new (THREE.Matrix3)()
+show_r2 = show_s2 = show_r3 = true
+
+redraw = () ->
+  clear_scene()
+  add_all(transform, show_r2, show_s2, show_r3) 
 
 camera.position.z = 2
 theta = -PI * 3/4
@@ -195,7 +125,7 @@ camera.position.x = 3 * Math.cos theta
 # Controls
 controls = new (THREE.OrbitControls)(camera, renderer.domElement)
 controls.enableDamping = true
-controls.dampingFactor = 0.1
+controls.dampingFactor = 1.0
 controls.enablePan = false
 
 render = ->
@@ -203,4 +133,59 @@ render = ->
   renderer.render scene, camera
   controls.update()
 
+
+# Reading and writing to the user's matrix
+write_input_matrix = (m, dim=3, id_prefix="input#trans_") ->
+  for r in [1..dim]
+    for c in [1..dim]
+      $(id_prefix + ('' + r) + ('' + c)).val(m.elements[(c - 1) * dim + (r - 1)])
+read_input_matrix = (dim=3, id_prefix="input#trans_") ->
+  a = Array(dim * dim)
+  for r in [1..dim]
+    for c in [1..dim]
+      a[(c - 1) * dim + (r - 1)] = parseFloat($(id_prefix + ('' + r) + ('' + c)).val())
+  return new (THREE.Matrix3)().fromArray(a)
+
+# Checkboxes
+for c in [
+  {'checkbox': 'input#show_r2', 'f': () -> show_r2 = this.checked ; redraw()},
+  {'checkbox': 'input#show_s2', 'f': () -> show_s2 = this.checked ; redraw()},
+  {'checkbox': 'input#show_r3', 'f': () -> show_r3 = this.checked ; redraw()}]
+  $(c.checkbox).prop('checked', true).change(c.f)
+
+$('button#apply_trans').click(() -> transform = read_input_matrix() ; redraw())
+
+$('button#create_sim').click(() -> 
+  prefix = 'input#sim_'
+  s = parseFloat($(prefix + 's').val())
+  theta = parseFloat($(prefix + 'theta').val())
+  theta = PI * theta / 180
+  tx = parseFloat($(prefix + 'tx').val())
+  ty = parseFloat($(prefix + 'ty').val())
+
+  m = new (THREE.Matrix3)().set(
+  # Similarity transformation
+    s * Math.cos(theta), -s * Math.sin(theta), tx,
+    s * Math.sin(theta), s * Math.cos(theta), ty,
+    0, 0, 1)
+  write_input_matrix(m))
+
+$('button#add_point').click(() -> 
+  x = parseFloat($('input#point_x').val())
+  y = parseFloat($('input#point_y').val())
+  points.push({'p': [x, y], 'c': 0})
+  redraw())
+$('button#add_line').click(() -> 
+  a = parseFloat($('input#line_a').val())
+  b = parseFloat($('input#line_b').val())
+  c = parseFloat($('input#line_c').val())
+  # Two points on the line ax + by + c:
+  # or y = (-ax - c) / b
+  # when x=0, y=-c/b
+  # when y=0, x=-c/a
+  lines.push({'p1': [0, -c/b], 'p2': [-c/a, 0], 'c': 0})
+  redraw())
+$('button#clear_all').click(() -> lines = []; points = []; clear_scene())
+
+redraw()
 render()
