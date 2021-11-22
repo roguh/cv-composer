@@ -4,7 +4,7 @@
 To download all files, run
 
 ```
-git clone --recursive https://github.com/hucal/cv-composer
+git clone --recursive https://github.com/roguh/cv-composer
 ```
 
 CMake and OpenCV are needed to compile this project.
